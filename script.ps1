@@ -21,7 +21,7 @@ $hookurl = "$dc"
 
 $Body = @{
   'username' = 'Хуууй'
-  'content' = $text
+  'content' = 'Чо'
 }
 
 if (-not ([string]::IsNullOrEmpty($text))){
